@@ -131,7 +131,7 @@ module.exports.pitch = function(request) {
 if (module.hot) {
 	module.hot.accept();
 	if (module.hot.data) {
-		require('${extractTextPluginHmrRuntime}')('%%extracted-hash%%','${publicPath}','%%extracted-file%%');
+		require('${extractTextPluginHmrRuntime}')('%%extracted-hash%%','${publicPath || '/'}','%%extracted-file%%');
 	}
 }`;
 				}
