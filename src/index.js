@@ -56,6 +56,11 @@ class ExtractTextPlugin {
   }
 
   mergeNonInitialChunks(chunk, intoChunk, checkedChunks) {
+    if (chunk.chunks) {
+      // Fix error when hot module replacement used with CommonsChunkPlugin
+      chunk.chunks = chunk.chunks.filter(c => typeof c !== 'undefined');
+    }
+
     if (!intoChunk) {
       checkedChunks = [];
       chunk.chunks.forEach((c) => {
@@ -194,7 +199,7 @@ class ExtractTextPlugin {
           callback();
         });
       });
-      compilation.plugin('additional-assets', (callback) => {
+      compilation.plugin('before-chunk-assets', () => {
         extractedChunks.forEach((extractedChunk) => {
           if (extractedChunk.getNumberOfModules()) {
             extractedChunk.sortModules((a, b) => {
@@ -217,9 +222,15 @@ class ExtractTextPlugin {
 
             compilation.assets[file] = source;
             chunk.files.push(file);
+
+            // Hot module replacement
+            extractedChunk.forEachModule((module) => {
+              const originalModule = module.getOriginalModule();
+              originalModule._source._value = originalModule._source._value.replace('%%extracted-file%%', file); // eslint-disable-line no-underscore-dangle
+              originalModule._source._value = originalModule._source._value.replace('%%extracted-hash%%', compilation.hash); // eslint-disable-line no-underscore-dangle
+            });
           }
         }, this);
-        callback();
       });
     });
   }
